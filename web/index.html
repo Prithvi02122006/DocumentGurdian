@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOCUMENT GUARDIAN — Secure Personal Identity & Document Vault</title>
+  <meta name="description" content="Zero-knowledge personal identity document management system with client-side envelope encryption, dynamic statutory validation, and encrypted vault storage.">
+  <link rel="icon" type="image/x-icon" href="../assets/icons/app_icon.ico">
+  
+  <!-- Modern Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/visual-cards.css">
+</head>
+<body>
+
+  <!-- Academic Project Disclaimer Banner -->
+  <aside class="disclaimer-banner" role="complementary" aria-label="Academic Project Disclaimer">
+    <span class="disclaimer-icon">🛡️</span>
+    <span><strong>STUDENT ACADEMIC PROJECT NOTICE:</strong> This application is a student-developed privacy demonstration. It is <strong>NOT an official Government of India service</strong> and is not affiliated with any government department.</span>
+  </aside>
+
+  <!-- Sticky Top Navigation -->
+  <header class="header-nav">
+    <div class="nav-container">
+      <a href="#" class="brand-wrapper" id="navBrandLogo" aria-label="Document Guardian Home">
+        <svg class="brand-logo-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="14" fill="#1E3A8A"/>
+          <path d="M32 10L14 18V32C14 44.5 21.7 56.1 32 59C42.3 56.1 50 44.5 50 32V18L32 10Z" stroke="#F59E0B" stroke-width="2.5" fill="#0C152E"/>
+          <path d="M25 32L30 37L39 26" stroke="#60A5FA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="brand-text-col">
+          <span class="brand-title">DOCUMENT GUARDIAN</span>
+          <span class="brand-subtitle">AES-256 Encrypted Personal Vault</span>
+        </div>
+      </a>
+
+      <!-- App View Switcher Tabs (Visible when Authenticated) -->
+      <nav id="mainNavTabs" class="view-tabs" role="tablist" style="display: none;">
+        <button class="tab-btn active" data-view="dashboard" role="tab">
+          📊 Dashboard
+        </button>
+        <button class="tab-btn" data-view="documents" role="tab">
+          📁 My Documents
+        </button>
+        <button class="tab-btn" data-view="reminders" role="tab">
+          ⏰ Reminders
+        </button>
+        <button class="tab-btn" data-view="vault" role="tab">
+          🔐 File Vault
+        </button>
+        <button class="tab-btn" data-view="audit" role="tab">
+          📜 Audit Trail
+        </button>
+        <button class="tab-btn" data-view="settings" role="tab">
+          ⚙️ Settings
+        </button>
+      </nav>
+
+      <!-- Right Action Items -->
+      <div class="nav-actions">
+        <!-- Live Idle Countdown Timer -->
+        <span id="navIdleTimer" class="idle-timer-pill" style="display: none;" title="Time remaining before automatic session lock">
+          ⏱️ 15:00
+        </span>
+
+        <!-- Active User Badge -->
+        <span id="navUserBadge" class="user-account-badge" style="display: none;">
+          👤 <span id="navUsername">User</span>
+        </span>
+
+        <!-- Quick Lock Button -->
+        <button id="navLockBtn" class="btn-card-action" style="display: none;" title="Lock vault session immediately">
+          🔒 Lock
+        </button>
+
+        <!-- Sign Out Button -->
+        <button id="navLogoutBtn" class="btn-card-action" style="display: none; color: #F87171;" title="Sign out and wipe cryptographic keys">
+          Sign Out
+        </button>
+
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light / Dark Theme" aria-label="Toggle theme">
+          <span id="themeIcon">☀️</span>
+        </button>
+
+        <!-- Windows App Download -->
+        <a href="downloads/DocumentGuardian.exe" download="DocumentGuardian.exe" class="btn-standalone-download" title="Download Desktop App for Windows">
+          ⬇️ <span>Windows App</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+
+    <!-- =========================================================================
+         VIEW 0: AUTHENTICATION (SIGN IN & REGISTER)
+         ========================================================================= -->
+    <section id="view-auth" class="app-section active">
+      <div class="auth-wrapper">
+        <div class="auth-card">
+          <!-- Auth Header -->
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 2.8rem; margin-bottom: 6px;">🛡️</div>
+            <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">DOCUMENT GUARDIAN</h2>
+            <p style="font-size: 0.88rem; color: var(--text-secondary);">Zero-Knowledge Personal Privacy & Encrypted Document Vault</p>
+          </div>
+
+          <!-- Auth Tabs -->
+          <div class="auth-tabs" role="tablist">
+            <button id="tabBtnSignIn" class="auth-tab-btn active" role="tab">Sign In</button>
+            <button id="tabBtnRegister" class="auth-tab-btn" role="tab">Create Account</button>
+          </div>
+
+          <!-- Lockout Alert Banner (hidden by default) -->
+          <div id="authLockoutAlert" class="lockout-alert" style="display: none;">
+            <span>🔒</span>
+            <span id="authLockoutMsg">Account temporarily locked. Please wait.</span>
+          </div>
+
+          <!-- Sign In Form -->
+          <form id="signInForm">
+            <div class="form-group">
+              <label class="form-label" for="loginUsername">Username</label>
+              <input type="text" id="loginUsername" class="form-input" placeholder="Enter your username" required autocomplete="username">
+            </div>
+
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="form-label" for="loginPassword">Master Password</label>
+                <button type="button" class="btn-card-action" id="toggleLoginPwdVisibility" style="padding: 2px 8px; font-size: 0.72rem;">Show</button>
+              </div>
+              <input type="password" id="loginPassword" class="form-input" placeholder="Enter your master password" required autocomplete="current-password">
+            </div>
+
+            <div style="margin-top: 20px;">
+              <button type="submit" id="btnSignInSubmit" class="btn-primary" style="width: 100%; justify-content: center;">
+                🔓 Unlock Personal Vault
+              </button>
+            </div>
+          </form>
+
+          <!-- Register Form -->
+          <form id="registerForm" style="display: none;">
+            <div class="form-group">
+              <label class="form-label" for="regUsername">Choose Username</label>
+              <input type="text" id="regUsername" class="form-input" placeholder="e.g. rahul_sharma" required autocomplete="username">
+            </div>
+
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="form-label" for="regPassword">Master Password</label>
+                <button type="button" class="btn-card-action" id="toggleRegPwdVisibility" style="padding: 2px 8px; font-size: 0.72rem;">Show</button>
+              </div>
+              <input type="password" id="regPassword" class="form-input" placeholder="Enter strong master password" required autocomplete="new-password">
+              
+              <!-- Dynamic Password Strength Meter -->
+              <div class="strength-meter-box">
+                <div class="strength-bar-track">
+                  <div id="strengthBarFill" class="strength-bar-fill"></div>
+                </div>
+                <div id="strengthLabel" class="strength-text">Password requirements: Min 10 characters, upper, lower, digit, symbol</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="regConfirmPassword">Confirm Master Password</label>
+              <input type="password" id="regConfirmPassword" class="form-input" placeholder="Re-enter master password" required autocomplete="new-password">
+            </div>
+
+            <div style="margin-top: 20px;">
+              <button type="submit" id="btnRegisterSubmit" class="btn-primary" style="width: 100%; justify-content: center;">
+                ✨ Create Encrypted Vault Account
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 1: DASHBOARD
+         ========================================================================= -->
+    <section id="view-dashboard" class="app-section" style="display: none;">
+      <!-- Dashboard Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 2px;">Vault Dashboard</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">Real-time status overview of all encrypted personal documents.</p>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-secondary" onclick="exportRegistryCSV()" style="padding: 9px 16px; font-size: 0.85rem;">
+            📊 Export CSV
+          </button>
+          <button class="btn-primary" onclick="openAddDocModal()" style="padding: 9px 18px; font-size: 0.85rem;">
+            + Add Document
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Metric Tiles -->
+      <div class="kpi-grid">
+        <div class="kpi-card" onclick="navigateToDocumentsFilter('All', 'All')">
+          <div class="kpi-label">Total Documents</div>
+          <div id="kpiDashTotal" class="kpi-value">0</div>
+        </div>
+
+        <div class="kpi-card kpi-valid" onclick="navigateToDocumentsFilter('All', 'Valid')">
+          <div class="kpi-label" style="color: var(--brand-emerald);">Valid Records</div>
+          <div id="kpiDashValid" class="kpi-value" style="color: var(--brand-emerald);">0</div>
+        </div>
+
+        <div class="kpi-card kpi-attention" onclick="navigateToDocumentsFilter('All', 'Attention Required')">
+          <div class="kpi-label" style="color: var(--brand-amber);">Attention Required</div>
+          <div id="kpiDashAttention" class="kpi-value" style="color: var(--brand-amber);">0</div>
+        </div>
+
+        <div class="kpi-card kpi-review" onclick="navigateToDocumentsFilter('All', 'Review Due')">
+          <div class="kpi-label" style="color: var(--brand-indigo);">Review Due</div>
+          <div id="kpiDashReview" class="kpi-value" style="color: var(--brand-indigo);">0</div>
+        </div>
+
+        <div class="kpi-card kpi-expired" onclick="navigateToDocumentsFilter('All', 'Expired')">
+          <div class="kpi-label" style="color: var(--brand-crimson);">Expired</div>
+          <div id="kpiDashExpired" class="kpi-value" style="color: var(--brand-crimson);">0</div>
+        </div>
+      </div>
+
+      <!-- Urgent Attention Radar Section -->
+      <div style="margin-top: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">⚠️ Documents Requiring Attention</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Records below require renewal, address update, or periodic biometric review.</p>
+          </div>
+          <button class="btn-card-action" onclick="switchAppView('reminders')">View All Reminders ➔</button>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="audit-table">
+            <thead>
+              <tr>
+                <th>Document</th>
+                <th>Masked Number</th>
+                <th>Milestone Date</th>
+                <th>Status</th>
+                <th>Notes / Urgency</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="urgentAttentionTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 2: MY DOCUMENTS (3D SMART CARDS & TABLE VIEW)
+         ========================================================================= -->
+    <section id="view-documents" class="app-section" style="display: none;">
+      <!-- Documents Toolbar -->
+      <div class="vault-toolbar" style="margin-bottom: 24px;">
+        <div class="search-box-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="docSearchInput" class="search-input" placeholder="Search by number, type, or notes...">
+        </div>
+
+        <div class="filter-group">
+          <!-- Document Type Filter -->
+          <select id="filterDocType" class="select-filter" aria-label="Filter by Document Type">
+            <option value="All">All Types</option>
+            <option value="Passport">Passport</option>
+            <option value="Aadhaar">Aadhaar</option>
+            <option value="PAN">PAN</option>
+          </select>
+
+          <!-- Status Filter -->
+          <select id="filterDocStatus" class="select-filter" aria-label="Filter by Document Status">
+            <option value="All">All Statuses</option>
+            <option value="Valid">Valid</option>
+            <option value="Attention Required">Attention Required</option>
+            <option value="Review Due">Review Due</option>
+            <option value="Expired">Expired</option>
+          </select>
+
+          <!-- 3D Smart Cards vs Table View Mode Switcher -->
+          <div class="view-mode-toggle">
+            <button id="viewToggleCards" class="view-mode-btn active" title="Holographic 3D Smart Cards">
+              🗂️ Cards
+            </button>
+            <button id="viewToggleTable" class="view-mode-btn" title="Detailed Data Table">
+              📋 Table
+            </button>
+          </div>
+
+          <!-- Add Document Button -->
+          <button class="btn-primary" onclick="openAddDocModal()" style="padding: 9px 18px; font-size: 0.85rem;">
+            + Add Document
+          </button>
+        </div>
+      </div>
+
+      <!-- Mode A: 3D Holographic Smart Cards Container -->
+      <div id="cardsViewContainer">
+        <div id="smartCardsGrid" class="cards-view-grid">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+      </div>
+
+      <!-- Mode B: Detailed Data Table Container (hidden by default) -->
+      <div id="tableViewContainer" style="display: none;">
+        <div class="table-wrapper">
+          <table class="audit-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Masked Number</th>
+                <th>Issue Date</th>
+                <th>Expiry / Review Date</th>
+                <th>Status</th>
+                <th>Notes</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="documentsTableBody">
+              <!-- Rendered dynamically by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 3: REMINDERS & MILESTONES
+         ========================================================================= -->
+    <section id="view-reminders" class="app-section" style="display: none;">
+      <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 2px;">Reminders & Renewal Milestones</h2>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">Proactive milestone tracking for Passports, Aadhaar address reviews, and PAN status checks.</p>
+      </div>
+
+      <div class="reminders-list" id="remindersListContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 4: ENCRYPTED FILE VAULT
+         ========================================================================= -->
+    <section id="view-vault" class="app-section" style="display: none;">
+      <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 2px;">Encrypted File Vault</h2>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">All supporting PDFs, scans, and identity photos are encrypted client-side with AES-256-GCM before storage.</p>
+      </div>
+
+      <!-- Secure File Dropzone -->
+      <div class="file-dropzone" id="fileDropzone">
+        <div class="dropzone-icon">🔒📁</div>
+        <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 6px;">Drop files to encrypt and store in vault</h3>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">Supported formats: PDF, PNG, JPG (Max 10 MB per file)</p>
+        <button type="button" class="btn-primary" onclick="document.getElementById('vaultFileInput').click()">Browse Files</button>
+        <input type="file" id="vaultFileInput" style="display: none;" accept=".pdf, .png, .jpg, .jpeg" multiple>
+      </div>
+
+      <!-- Encrypted Files Grid -->
+      <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">Encrypted Vault Files (<span id="vaultFileCount">0</span>)</h3>
+      <div class="files-grid" id="vaultFilesGrid">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 5: AUDIT TRAIL
+         ========================================================================= -->
+    <section id="view-audit" class="app-section" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 2px;">Security Audit Log (Append-Only)</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">Real-time immutable activity log. Sensitive document numbers and master keys are never stored in log records.</p>
+        </div>
+        <button class="btn-secondary" onclick="exportAuditLogCSV()" style="padding: 8px 16px; font-size: 0.85rem;">
+          📥 Export Audit CSV
+        </button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th style="width: 150px;">Timestamp</th>
+              <th style="width: 180px;">Action</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="auditTableBody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 6: SETTINGS & VAULT MANAGEMENT
+         ========================================================================= -->
+    <section id="view-settings" class="app-section" style="display: none;">
+      <div class="settings-grid">
+        <!-- Panel 1: Master Password & DEK Re-wrapping -->
+        <div class="settings-card">
+          <h3>🔑 Change Master Password</h3>
+          <p>Re-encrypts your Data Encryption Key (DEK) with a new password. All document records remain completely intact and decryptable.</p>
+
+          <form id="changePasswordForm">
+            <div class="form-group">
+              <label class="form-label" for="currMasterPwd">Current Master Password</label>
+              <input type="password" id="currMasterPwd" class="form-input" required autocomplete="current-password">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="newMasterPwd">New Master Password</label>
+              <input type="password" id="newMasterPwd" class="form-input" required autocomplete="new-password">
+              <span class="form-help">Must be >= 10 chars, uppercase, lowercase, number, and symbol.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="confirmNewMasterPwd">Confirm New Master Password</label>
+              <input type="password" id="confirmNewMasterPwd" class="form-input" required autocomplete="new-password">
+            </div>
+
+            <button type="submit" class="btn-primary" style="margin-top: 10px;">
+              Re-wrap Vault Key & Update Password
+            </button>
+          </form>
+        </div>
+
+        <!-- Panel 2: Inactivity Auto-Lock Timeout -->
+        <div class="settings-card">
+          <h3>⏱️ Inactivity Auto-Lock</h3>
+          <p>Automatically purges cryptographic keys from browser memory when you leave your device unattended.</p>
+
+          <div class="range-slider-wrapper">
+            <input type="range" id="timeoutSlider" class="range-slider" min="1" max="60" value="15">
+            <span id="sliderValBadge" class="slider-val-badge">15 min</span>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 14px;">
+            <button type="button" class="btn-secondary" onclick="window.storageService.lockSession('Manual auto-lock test'); showToast('Vault locked successfully', 'info'); updateAppSessionState();">
+              🔒 Test Lock Now
+            </button>
+          </div>
+        </div>
+
+        <!-- Panel 3: Data Export & Encrypted Vault Backup -->
+        <div class="settings-card">
+          <h3>💾 Zero-Knowledge Backup & Restore</h3>
+          <p>Create full encrypted backups of your vault or restore an existing backup on any device.</p>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button type="button" class="btn-primary" onclick="downloadEncryptedBackup()">
+              📦 Export Encrypted JSON Backup
+            </button>
+
+            <button type="button" class="btn-secondary" onclick="exportRegistryCSV()">
+              📊 Export Decrypted CSV
+            </button>
+          </div>
+
+          <!-- Restore Form -->
+          <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-subtle);">
+            <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--text-primary);">Restore Vault from Backup</h4>
+            <div class="form-group">
+              <input type="file" id="backupFileInput" class="form-input" accept=".json">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="backupRestorePwd">Master Password for Backup</label>
+              <input type="password" id="backupRestorePwd" class="form-input" placeholder="Enter backup's master password">
+            </div>
+            <button type="button" class="btn-secondary" onclick="handleRestoreBackup()">
+              🔄 Restore Vault Records
+            </button>
+          </div>
+        </div>
+
+        <!-- Panel 4: Desktop Application Downloads -->
+        <div class="settings-card">
+          <h3>💻 Desktop Application Downloads</h3>
+          <p>Run Document Guardian locally on your Windows PC as a standalone application without requiring Python or internet connectivity.</p>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <a href="downloads/DocumentGuardian.exe" download="DocumentGuardian.exe" class="btn-primary" style="text-decoration: none;">
+              ⬇️ Download Windows App (.exe - 25 MB)
+            </a>
+            <a href="downloads/DocumentGuardian-Windows-v1.0.0.zip" download="DocumentGuardian-Windows-v1.0.0.zip" class="btn-secondary" style="text-decoration: none;">
+              📦 Download Complete ZIP Package (24.8 MB)
+            </a>
+          </div>
+        </div>
+
+        <!-- Panel 5: Security Architecture & Disclaimer -->
+        <div class="settings-card">
+          <h3>🛡️ Cryptographic Architecture & Notice</h3>
+          <p>Document Guardian implements strict zero-knowledge principles:</p>
+          <ul style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+            <li><strong>AES-256-GCM:</strong> Authenticated symmetric encryption with tamper detection for numbers and files.</li>
+            <li><strong>PBKDF2 SHA-256 (100,000 rounds):</strong> Memory-hard Key Encrypting Key derivation.</li>
+            <li><strong>HMAC-SHA256:</strong> Blind index for duplicate document detection without storing plaintext.</li>
+            <li><strong>Zero Plaintext Storage:</strong> Cryptographic keys exist only in volatile RAM during active session.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       NATIVE DIALOG MODALS (<dialog>)
+       ========================================================================= -->
+
+  <!-- Add / Edit Document Dialog -->
+  <dialog id="addDocDialog" aria-labelledby="addDocDialogTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="addDocDialogTitle" class="modal-title">+ Add Document to Encrypted Vault</h3>
+        <button class="modal-close-btn" onclick="closeDialog('addDocDialog')" aria-label="Close dialog">✕</button>
+      </div>
+
+      <form id="addDocForm">
+        <input type="hidden" id="editingDocId" value="">
+
+        <div class="form-group">
+          <label class="form-label" for="modalDocType">Document Type</label>
+          <select id="modalDocType" class="form-select" required>
+            <option value="Passport">Passport (Requires Issue & Expiry)</option>
+            <option value="Aadhaar">Aadhaar (Statutory Lifetime Validity)</option>
+            <option value="PAN">PAN (Permanent Account Number)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modalDocNumber">Document Number</label>
+          <input type="text" id="modalDocNumber" class="form-input" placeholder="e.g. Z9876543, 2345 6789 0128, or ABCDE1234F" required autocomplete="off">
+          <span class="form-help" id="docNumberHelpText">Will be encrypted with AES-256-GCM before storage.</span>
+        </div>
+
+        <!-- Passport Specific Fields -->
+        <div id="passportOnlyFields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="modalIssueDate">Issue Date</label>
+            <input type="date" id="modalIssueDate" class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modalExpiryDate">Expiry Date</label>
+            <input type="date" id="modalExpiryDate" class="form-input">
+          </div>
+        </div>
+
+        <!-- Aadhaar & PAN Lifetime Validity Notice -->
+        <div id="lifetimeNotice" style="display: none; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 10px 14px; border-radius: var(--radius-md); font-size: 0.8rem; color: var(--brand-emerald); margin-bottom: 14px;">
+          ✓ Statutory Rule: This document possesses permanent lifetime validity and does not expire.
+        </div>
+
+        <!-- Optional Review Date for Aadhaar / PAN -->
+        <div id="reviewOnlyFields" class="form-group" style="display: none;">
+          <label class="form-label" for="modalReminderDate">Optional Review Reminder Date</label>
+          <input type="date" id="modalReminderDate" class="form-input">
+          <span class="form-help">Set a future date for biometrics or address verification reminder.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modalNotes">Notes / Description (Optional)</label>
+          <input type="text" id="modalNotes" class="form-input" placeholder="e.g. Primary Identity Document, Renewal Planned...">
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeDialog('addDocDialog')">Cancel</button>
+          <button type="submit" id="btnSubmitDocModal" class="btn-primary">Encrypt & Save Record</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- View Document Decrypted Dialog -->
+  <dialog id="viewDocDialog" aria-labelledby="viewModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="viewModalTitle" class="modal-title">Document Details (Decrypted)</h3>
+        <button class="modal-close-btn" onclick="closeDialog('viewDocDialog')" aria-label="Close dialog">✕</button>
+      </div>
+
+      <div id="viewModalBody">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="form-actions" style="margin-top: 20px;">
+        <button type="button" class="btn-primary" onclick="closeDialog('viewDocDialog')">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Session Lock Screen Overlay -->
+  <div id="lockScreenOverlay" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(7, 13, 30, 0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); align-items: center; justify-content: center;">
+    <div class="auth-card" style="max-width: 440px; width: 90%; text-align: center;">
+      <div style="font-size: 3.5rem; margin-bottom: 12px;">🔒</div>
+      <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;">Vault Locked</h3>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
+        Cryptographic keys were purged from memory. Enter your master password to decrypt your vault.
+      </p>
+
+      <form id="overlayUnlockForm">
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label" for="overlayUnlockPassword">Master Password</label>
+          <input type="password" id="overlayUnlockPassword" class="form-input" placeholder="Enter master password" required autofocus>
+        </div>
+
+        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">Unlock Vault</button>
+          <button type="button" class="btn-secondary" onclick="handleLockSignOut()" style="width: 100%; justify-content: center;">Sign Out</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h4>DOCUMENT GUARDIAN</h4>
+        <p style="margin-bottom: 12px; font-size: 0.82rem; line-height: 1.6;">
+          An independent academic software engineering project exploring zero-knowledge envelope encryption,
+          client-side authenticated cryptography, and respectful personal privacy vault interfaces.
+        </p>
+        <p style="font-size: 0.75rem; color: var(--brand-amber);">
+          Notice: Strictly NOT an official Government of India application. No government department affiliation.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h5>Vault Subsystems</h5>
+        <ul>
+          <li><a href="#" onclick="switchAppView('dashboard'); return false;">System Dashboard</a></li>
+          <li><a href="#" onclick="switchAppView('documents'); return false;">Holographic Smart Cards</a></li>
+          <li><a href="#" onclick="switchAppView('reminders'); return false;">Dynamic Milestone Radar</a></li>
+          <li><a href="#" onclick="switchAppView('vault'); return false;">AES-256 Encrypted File Vault</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Security Specifications</h5>
+        <ul>
+          <li><span>AES-256-GCM Authenticated Encryption</span></li>
+          <li><span>Argon2id / PBKDF2 (100k rounds)</span></li>
+          <li><span>HMAC-SHA256 Blind Index</span></li>
+          <li><span>Zero Plaintext Key Storage</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>Student Academic Engineering Project. All rights reserved.</span>
+      <span>Document Guardian Web v1.0.0</span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/crypto.js"></script>
+  <script src="js/models.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

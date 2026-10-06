@@ -1,0 +1,7 @@
+customtkinter==6.0.0
+cryptography==50.0.1
+argon2-cffi==25.1.0
+pillow==12.3.0
+plyer==2.1.0
+pytest==9.1.1
+packaging==26.3

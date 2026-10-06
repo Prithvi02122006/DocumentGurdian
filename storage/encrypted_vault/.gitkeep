@@ -1,0 +1,2 @@
+# Encrypted vault directory for Document Guardian
+# All files stored here are encrypted with AES-256-GCM.

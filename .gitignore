@@ -1,0 +1,38 @@
+# Python Virtual Environment
+.venv/
+venv/
+env/
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller / Build outputs
+build/
+dist/
+*.spec
+
+# Pytest / Test Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases & encrypted personal vaults (Do not commit sensitive user vaults)
+*.db
+*.sqlite
+*.sqlite3
+storage/encrypted_vault/*
+!storage/encrypted_vault/.gitkeep
+storage/backups/*
+
+# Web compiled downloads (Large binaries should be uploaded to GitHub Releases)
+web/downloads/*.exe
+web/downloads/*.zip
+
+# OS & IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
